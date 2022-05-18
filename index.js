@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 const PORT = 8000;
 
+app.use(express.json());
+
 const userData = [
     {
         username: "hampus83",
@@ -20,53 +22,63 @@ const userData = [
     }
 ];
 
-const userInput = {
-    username: "glenn",
-    password: "glenn123"
-}
-
-let result = {
+let loginResult = {
     success: false
 }
 
-
-const filterUsernames = () => {
-    const filteredArray = userData.filter((data) => {
-        // console.log('input:', userInput.username)
-        // console.log('alla:', data.username)
-        // console.log('result.success:', result.success)
-        
-        if (userInput.username === data.username && userInput.password === data.password) {
-            result.success = true
-            console.log('result.success i if-satsen1:',result.success);
-            console.log('DET STÄMMMMMMMMMMMMMMMMER!!!!!')
-            return data
-        } 
-        // else {
-        //     result.success = false
-        //     console.log('result.success i if-satsen2:',result.success);
-        //     console.log('DET STÄMMER INTE?!?!????????')
-        //     return data
-        // }
-        
-    });
-    console.log('filteredArray:',filteredArray)
-    return filteredArray
-}
-
-app.use(express.json());
-
 app.post('/api/login', (request, response) => {
-    filterUsernames();
-    const userInput = request.body
-    console.log('userInput:', userInput);
-    console.log('result.success i post', result.success)
     
-    response.json(result);
+    const userInput = request.body;
+
+    const filteredUser = userData.filter(userData => userInput.username == userData.username && userInput.password == userData.password)
+
+    console.log(filteredUser);
+
+    if (filteredUser.length > 0) {
+        loginResult.success = true;
+    } else {
+        loginResult.success = false;
+    }
+
+    response.json(loginResult);
 });
 
+let signupResult = {
+    success: false,
+    usernameExists: false,
+    emailExists: false
+}
+
 app.post('/api/signup', (request, response) => {
-    //använd filter!
+    const userInput = request.body;
+    // console.log(userInput);
+
+    const filteredUsername = userData.filter(userData => userInput.username == userData.username);
+    const filteredEmail = userData.filter(userData => userInput.email == userData.email);
+
+    if (filteredUsername.length > 0) {
+        signupResult.usernameExists = true
+    } else {
+        signupResult.usernameExists = false
+    }
+
+    if (filteredEmail.length > 0) {
+        signupResult.emailExists = true
+    } else {
+        signupResult.emailExists = false
+    }
+
+    if (signupResult.usernameExists == true || signupResult.emailExists == true) {
+        signupResult.success = false;
+    } else {
+        signupResult.success = true;
+    }
+
+    console.log('username exist:', filteredUsername);
+    console.log('email exist', filteredEmail);
+
+    response.json(signupResult);
+
 });
 
 app.listen(PORT, () => {
